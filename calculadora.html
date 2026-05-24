@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora de Aspect Ratio Pro (Fixed Calculation)</title>
+    <style>
+        :root {
+            --bg-color: #121214;
+            --card-bg: #1e2024;
+            --border-color: #2e3238;
+            --text-color: #e1e3e6;
+            --text-muted: #9aa0a6;
+            --accent-color: #00b4d8;
+            --input-bg: #2a2d32;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .calculator-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .row-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .input-group {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group:first-child {
+            border-right: 1px solid var(--border-color);
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-color);
+        }
+
+        label span {
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+
+        input[type="number"] {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: #fff;
+            padding: 10px 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--accent-color);
+        }
+
+        .row-controls {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .control-group {
+            padding: 20px;
+        }
+
+        .control-group:first-child {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .options-inline {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .options-inline label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-weight: normal;
+            font-size: 0.9rem;
+        }
+
+        .mode-toggle-group {
+            display: flex;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 3px;
+            margin-top: 5px;
+        }
+
+        .mode-label {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin: 0;
+            transition: all 0.2s;
+        }
+
+        .mode-toggle-group input[type="radio"] {
+            display: none;
+        }
+
+        .mode-toggle-group input[type="radio"]:checked + .mode-label {
+            background-color: var(--border-color);
+            color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .main-ratio-display {
+            text-align: center;
+            padding: 25px 20px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .preview-section {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin: 0 20px 20px 20px;
+            padding: 20px;
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        .preview-title {
+            text-align: center;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .preview-stats {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .preview-canvas {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .outer-guide {
+            width: 280px;
+            height: 180px;
+            border: 1px dashed rgba(0, 180, 216, 0.25);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .dynamic-box {
+            background: linear-gradient(145deg, #e1e3e6, #b0b3b8);
+            border-radius: 4px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            transition: width 0.2s ease, height 0.2s ease;
+        }
+
+        .info-footer {
+            padding: 15px 20px;
+            background-color: rgba(0, 0, 0, 0.15);
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .info-footer strong {
+            color: var(--text-color);
+        }
+        
+        .info-footer span {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator-container">
+        <div class="row-inputs">
+            <div class="input-group">
+                <label for="ancho">Ancho <span>(px)</span></label>
+                <input type="number" id="ancho" value="1920">
+            </div>
+            <div class="input-group">
+                <label for="alto">Alto <span>(px)</span></label>
+                <input type="number" id="alto" value="1080">
+            </div>
+        </div>
+
+        <div class="row-controls">
+            <div class="control-group">
+                <label>Ratios Predefinidos</label>
+                <div class="options-inline">
+                    <label><input type="radio" name="ratio" value="16/9" checked> 16:9</label>
+                    <label><input type="radio" name="ratio" value="4/3"> 4:3</label>
+                    <label><input type="radio" name="ratio" value="2/3"> 2:3</label>
+                    <label><input type="radio" name="ratio" value="1/1"> 1:1</label>
+                    <label><input type="radio" name="ratio" value="9/16"> 9:16</label>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Modo de Cálculo</label>
+                <div class="mode-toggle-group">
+                    <input type="radio" name="modo" id="modoAlto" value="alto" checked>
+                    <label for="modoAlto" class="mode-label">Recalcular Alto</label>
+
+                    <input type="radio" name="modo" id="modoAncho" value="ancho">
+                    <label for="modoAncho" class="mode-label">Recalcular Ancho</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-ratio-display">
+            Relación Detectada: <span id="lbl-proporcion" style="color:#00b4d8;">16:9</span>
+        </div>
+
+        <div class="preview-section">
+            <div class="preview-title">Visualización de Proporción</div>
+            <div class="preview-stats">
+                Píxeles: <span id="stat-pixels">1920 x 1080</span><br>
+                Relación: <span id="stat-decimal">1.7778</span>
+            </div>
+            
+            <div class="preview-canvas">
+                <div class="outer-guide">
+                    <div id="preview-box" class="dynamic-box"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-footer" id="info-footer">
+            <div><strong>Estilo:</strong> Panorámico horizontal. Estándar multimedia actual.</div>
+            <div style="margin-top: 4px;"><strong>Ejemplos:</strong> YouTube, Netflix, Monitores de PC.</div>
+        </div>
+    </div>
+
+    <script>
+        const inputAncho = document.getElementById('ancho');
+        const inputAlto = document.getElementById('alto');
+        const lblProporcion = document.getElementById('lbl-proporcion');
+        const statPixels = document.getElementById('stat-pixels');
+        const statDecimal = document.getElementById('stat-decimal');
+        const previewBox = document.getElementById('preview-box');
+        const infoFooter = document.getElementById('info-footer');
+
+        // Memoria para el último ratio seleccionado (Empieza por defecto en 16:9)
+        let ultimoRatioAncho = 16;
+        let ultimoRatioAlto = 9;
+        let controlBloqueado = false; // Evita bucles infinitos de eventos
+
+        const descripciones = {
+            "16:9": { estilo: "Panorámico horizontal. Estándar multimedia actual.", ejemplos: "YouTube, Netflix, Monitores de PC." },
+            "9:16": { estilo: "Vertical completo. Ideal para contenido móvil nativo.", ejemplos: "TikTok, Instagram Reels, Shorts." },
+            "4:3": { estilo: "Formato cuadrado/estándar antiguo.", ejemplos: "Televisores viejos, iPads, Fotos antiguas." },
+            "3:2": { estilo: "Formato fotográfico horizontal clásico.", ejemplos: "Cámaras DSLR, impresiones fotográficas estándares." },
+            "2:3": { estilo: "Formato fotográfico vertical.", ejemplos: "Fotos de retrato verticales, feeds móviles." },
+            "1:1": { estilo: "Cuadrado perfecto.", ejemplos: "Instagram posts, Fotos de perfil." }
+        };
+
+        function calcularMCD(a, b) {
+            return b === 0 ? a : calcularMCD(b, a % b);
+        }
+
+        function actualizarDibujoYStats() {
+            const w = parseInt(inputAncho.value) || 0;
+            const h = parseInt(inputAlto.value) || 0;
+
+            if (w <= 0 || h <= 0) {
+                lblProporcion.textContent = "-";
+                statPixels.textContent = "0 x 0";
+                statDecimal.textContent = "0.0000";
+                return;
+            }
+
+            statPixels.textContent = `${w} x ${h}`;
+            statDecimal.textContent = (w / h).toFixed(4);
+
+            const mcd = calcularMCD(w, h);
+            const simplificado = `${w / mcd}:${h / mcd}`;
+            lblProporcion.textContent = simplificado;
+
+            // Renderizado estricto del canvas dinámico
+            const MAX_W = 260;
+            const MAX_H = 160;
+
+            if (w >= h) {
+                previewBox.style.width = `${MAX_W}px`;
+                previewBox.style.height = `${Math.round(MAX_W * (h / w))}px`;
+                if (parseInt(previewBox.style.height) > MAX_H) {
+                    previewBox.style.height = `${MAX_H}px`;
+                    previewBox.style.width = `${Math.round(MAX_H * (w / h))}px`;
+                }
+            } else {
+                previewBox.style.height = `${MAX_H}px`;
+                previewBox.style.width = `${Math.round(MAX_H * (w / h))}px`;
+                if (parseInt(previewBox.style.width) > MAX_W) {
+                    previewBox.style.width = `${MAX_W}px`;
+                    previewBox.style.height = `${Math.round(MAX_W * (h / w))}px`;
+                }
+            }
+
+            // Cambiar descripciones del footer
+            if (descripciones[simplificado]) {
+                infoFooter.innerHTML = `
+                    <div><strong>Estilo:</strong> ${descripciones[simplificado].estilo}</div>
+                    <div style="margin-top: 4px;"><strong>Ejemplos:</strong> ${descripciones[simplificado].ejemplos}</div>
+                `;
+            } else {
+                infoFooter.innerHTML = `
+                    <div><strong>Estilo:</strong> Proporción personalizada (${w > h ? 'Horizontal' : 'Vertical'}).</div>
+                    <div style="margin-top: 4px;"><strong>Ejemplos:</strong> Dimensiones libres del lienzo.</div>
+                `;
+            }
+        }
+
+        // --- MANEJO DE ENTRADAS DEL USUARIO ---
+
+        // Cuando cambia el ANCHO
+        inputAncho.addEventListener('input', () => {
+            if (controlBloqueado) return;
+            const modo = document.querySelector('input[name="modo"]:checked').value;
+            const w = parseInt(inputAncho.value) || 0;
+
+            if (modo === 'alto' && w > 0) {
+                controlBloqueado = true;
+                inputAlto.value = Math.round((w * ultimoRatioAlto) / ultimoRatioAncho);
+                controlBloqueado = false;
+            } else {
+                // Si está en modo calcular Ancho, romper el puntito porque el usuario cambió las reglas
+                desmarcarRadios();
+            }
+            actualizarDibujoYStats();
+        });
+
+        // Cuando cambia el ALTO
+        inputAlto.addEventListener('input', () => {
+            if (controlBloqueado) return;
+            const modo = document.querySelector('input[name="modo"]:checked').value;
+            const h = parseInt(inputAlto.value) || 0;
+
+            if (modo === 'ancho' && h > 0) {
+                controlBloqueado = true;
+                inputAncho.value = Math.round((h * ultimoRatioAncho) / ultimoRatioAlto);
+                controlBloqueado = false;
+            } else {
+                // Si está en modo calcular Alto, romper el puntito porque el usuario cambió las reglas
+                desmarcarRadios();
+            }
+            actualizarDibujoYStats();
+        });
+
+        // Cuando el usuario hace click en un Ratio Predefinido
+        document.querySelectorAll('input[name="ratio"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const [ratioAncho, ratioAlto] = e.target.value.split('/').map(Number);
+                
+                // Almacenamos en memoria permanente
+                ultimoRatioAncho = ratioAncho;
+                ultimoRatioAlto = ratioAlto;
+
+                const modo = document.querySelector('input[name="modo"]:checked').value;
+                const w = parseInt(inputAncho.value) || 0;
+                const h = parseInt(inputAlto.value) || 0;
+
+                controlBloqueado = true;
+                if (modo === 'alto' && w > 0) {
+                    inputAlto.value = Math.round((w * ultimoRatioAlto) / ultimoRatioAncho);
+                } else if (modo === 'ancho' && h > 0) {
+                    inputAncho.value = Math.round((h * ultimoRatioAncho) / ultimoRatioAlto);
+                }
+                controlBloqueado = false;
+
+                actualizarDibujoYStats();
+            });
+        });
+
+        // Al cambiar de modo de cálculo, fuerza el cálculo con el último ratio guardado
+        document.querySelectorAll('input[name="modo"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const modo = document.querySelector('input[name="modo"]:checked').value;
+                const w = parseInt(inputAncho.value) || 0;
+                const h = parseInt(inputAlto.value) || 0;
+
+                controlBloqueado = true;
+                if (modo === 'alto' && w > 0) {
+                    inputAlto.value = Math.round((w * ultimoRatioAlto) / ultimoRatioAncho);
+                } else if (modo === 'ancho' && h > 0) {
+                    inputAncho.value = Math.round((h * ultimoRatioAncho) / ultimoRatioAlto);
+                }
+                controlBloqueado = false;
+                
+                actualizarDibujoYStats();
+            });
+        });
+
+        function desmarcarRadios() {
+            // Desmarca visualmente pero NO altera las variables ultimoRatioAncho/Alto
+            document.querySelectorAll('input[name="ratio"]').forEach(r => r.checked = false);
+        }
+
+        // Ejecutar al arrancar la página
+        actualizarDibujoYStats();
+    </script>
+</body>
+</html>
