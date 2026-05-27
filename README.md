@@ -1,5 +1,7 @@
 # Calculadora de Aspect Ratio Pro
 
+![Vista de la aplicación](images/main.png)
+
 Calculadora profesional para calcular y visualizar el aspect ratio de videos e imágenes.
 
 ## Características
